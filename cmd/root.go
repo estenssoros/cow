@@ -6,7 +6,7 @@ import (
 )
 
 var RootCmd = &cobra.Command{
-	Use: "buff",
+	Use: "cow",
 }
 
 func Execute() {
