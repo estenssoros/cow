@@ -5,3 +5,5 @@ go-bindata \
   -pkg initializer \
   -prefix templates \
   templates templates/server templates/src
+
+go install
