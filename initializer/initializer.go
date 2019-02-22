@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -24,12 +25,18 @@ func New(ctx context.Context, appName string) (*Initializer, error) {
 	}
 
 	i.steps = []func() error{
-		i.createReactApp,
+		// i.createReactApp,
+		i.prepSubDirectory,
 		i.prepSubDirectories,
 		i.writeGitignore,
 		i.prepServerFolder,
 		i.prepSrcFolder,
 		i.writeBinData,
+		i.runYarnInstall,
+		i.removeNodeModules,
+		i.runYarnInstall,
+		i.cowBuild,
+		i.gitInit,
 	}
 
 	formatter := &logrus.TextFormatter{
@@ -54,6 +61,31 @@ func (i *Initializer) exec(name string, args ...string) error {
 	return nil
 }
 
+func (i *Initializer) execDirectory(dir, name string, args ...string) error {
+	cmd := exec.CommandContext(i.ctx, name, args...)
+	logrus.Debugf("running %s", strings.Join(cmd.Args, " "))
+	cmd.Stdin = os.Stdin
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	wd, _ := os.Getwd()
+	cmd.Dir = filepath.Join(wd, dir)
+	err := cmd.Run()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+func (i *Initializer) prepSubDirectory() error {
+	if _, err := os.Stat(i.appName); err == nil {
+		return errors.Errorf("%s allready exists", i.appName)
+	}
+	if err := os.Mkdir(i.appName, 0700); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (i *Initializer) createReactApp() error {
 	logrus.Infof("creating new app at %s", i.appName)
 	args := []string{
@@ -69,7 +101,13 @@ func (i *Initializer) createReactApp() error {
 }
 
 func (i *Initializer) prepSubDirectories() error {
-	for _, dir := range []string{"server", "bin", "tmp"} {
+	for _, dir := range []string{
+		"bin",
+		"public",
+		"server",
+		"src",
+		"tmp",
+	} {
 		dir = filepath.Join(i.appName, dir)
 		logrus.Infof("creating folder: %s", dir)
 		if err := os.Mkdir(dir, 0700); err != nil {
@@ -80,7 +118,14 @@ func (i *Initializer) prepSubDirectories() error {
 }
 
 func (i *Initializer) prepServerFolder() error {
-	for _, dir := range []string{"api", "data", "models", "seed", "service"} {
+	dirs := []string{
+		"api",
+		"data",
+		"models",
+		"seed",
+		"service",
+	}
+	for _, dir := range dirs {
 		dir = filepath.Join("server", dir)
 		logrus.Infof("creating folder: %s", dir)
 		if err := os.Mkdir(filepath.Join(i.appName, dir), 0700); err != nil {
@@ -97,6 +142,14 @@ func (i *Initializer) prepSrcFolder() error {
 		if err := os.Mkdir(filepath.Join(i.appName, dir), 0700); err != nil {
 			return errors.Wrapf(err, "making subdirectory %s", dir)
 		}
+	}
+	return nil
+}
+
+func (i *Initializer) gitInit() error {
+	logrus.Info("creating new git repository")
+	if err := i.exec("git", "init"); err != nil {
+		return err
 	}
 	return nil
 }
@@ -137,21 +190,103 @@ func (i *Initializer) Run() error {
 	return nil
 }
 
+func ensureDirExists(fileName string) error {
+	parDir := filepath.Dir(fileName)
+	if _, err := os.Stat(parDir); err == nil {
+		return nil
+	}
+	if err := os.Mkdir(parDir, 0700); err != nil {
+		return err
+	}
+	return nil
+}
+
+type TemplateData struct {
+	ServerAPIPath string
+	AppName       string
+}
+
+func (i *Initializer) newTemplate() (*TemplateData, error) {
+	gopath := os.Getenv("GOPATH") // /Users/estenssoros/go
+	wd, err := os.Getwd()         // /Users/estenssoros/go/src/github.com/estenssoros/asdf
+	if err != nil {
+		return nil, err
+	}
+	if !strings.Contains(wd, gopath) {
+		return nil, errors.New("must be installed in GOPATH")
+	}
+	wd = strings.Replace(wd, gopath, "", 1)[5:] // github.com/estenssoros/asdf
+	wd = filepath.Join(wd, i.appName, "server", "api")
+	return &TemplateData{
+		ServerAPIPath: wd,
+		AppName:       i.appName,
+	}, nil
+}
+
+func (i *Initializer) shouldTemplate(assetName string) bool {
+	switch assetName {
+	case "server/app.go", "package.json":
+		return true
+	}
+	return false
+}
+
 func (i *Initializer) writeBinData() error {
+	tmplData, err := i.newTemplate()
+	if err != nil {
+		return err
+	}
 	for _, assetName := range AssetNames() {
+		logrus.Info(assetName)
 		data, err := Asset(assetName)
 		if err != nil {
 			return err
 		}
-		assetName = filepath.Join(i.appName, assetName)
-		logrus.Info(assetName)
-		f, err := os.Create(assetName)
+		dst := filepath.Join(i.appName, assetName)
+		if err := ensureDirExists(dst); err != nil {
+			return err
+		}
+		f, err := os.Create(dst)
 		if err != nil {
 			return err
 		}
-		if _, err := f.Write(data); err != nil {
-			return err
+		defer f.Close()
+		if i.shouldTemplate(assetName) {
+
+			tmpl, err := template.New("").Parse(string(data))
+			if err != nil {
+				return err
+			}
+			if err := tmpl.Execute(f, tmplData); err != nil {
+				return err
+			}
+		} else {
+			if _, err := f.Write(data); err != nil {
+				return err
+			}
 		}
+
+	}
+	return nil
+}
+
+func (i *Initializer) runYarnInstall() error {
+	if err := i.execDirectory(i.appName, "yarn", "install"); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (i *Initializer) removeNodeModules() error {
+	if err := os.RemoveAll(filepath.Join(i.appName, "node_modules")); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (i *Initializer) cowBuild() error {
+	if err := i.execDirectory(i.appName, "cow", "build"); err != nil {
+		return err
 	}
 	return nil
 }
