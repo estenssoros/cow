@@ -1,6 +1,6 @@
 package main
 
-import "github.com/seaspancode/buff/cmd"
+import "github.com/estenssoros/cow/cmd"
 
 func main() {
 	cmd.Execute()
