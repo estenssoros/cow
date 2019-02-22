@@ -197,7 +197,7 @@ func (i *Initializer) newTemplate() (*TemplateData, error) {
 
 func (i *Initializer) shouldTemplate(assetName string) bool {
 	switch assetName {
-	case "server/app.go", "package.json":
+	case "server/app.go", "package.json", "public/index.html":
 		return true
 	}
 	return false
