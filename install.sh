@@ -10,9 +10,9 @@ go-bindata \
   templates/server/api \
   templates/src \
   templates/src/actions \
+  templates/src/constants \
   templates/src/components \
   templates/src/components/navigation \
-  templates/src/constants \
   templates/src/modules \
   templates/src/reducers \
   templates/src/store \
