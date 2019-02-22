@@ -1,6 +1,6 @@
 # Cow
 
-All inspiration (and code) drawn from https://github.com/gobuffalo. My goal was to simplify the process for working with a golang-react-typescript application allowing users to create their database schemas, migrations, and middlewares.
+All inspiration (and code) drawn from https://github.com/gobuffalo. My goal was to simplify the process for working with a golang-react-typescript application while allowing users to create their database schemas, migrations, and middlewares.
 
 As of today, I have no tests, contributors, or stars.
 
