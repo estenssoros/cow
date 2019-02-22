@@ -3,9 +3,9 @@ package main
 import (
 	"net/http"
 
+	"github.com/estenssoros/cow/templates/server/api"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-	"github.com/seaspancode/data-tool/server/api"
 )
 
 func NewApp() *echo.Echo {
