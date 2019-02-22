@@ -25,12 +25,10 @@ func New(ctx context.Context, appName string) (*Initializer, error) {
 	}
 
 	i.steps = []func() error{
-		// i.createReactApp,
 		i.prepSubDirectory,
 		i.prepSubDirectories,
 		i.writeGitignore,
 		i.prepServerFolder,
-		i.prepSrcFolder,
 		i.writeBinData,
 		i.runYarnInstall,
 		i.removeNodeModules,
@@ -78,7 +76,7 @@ func (i *Initializer) execDirectory(dir, name string, args ...string) error {
 
 func (i *Initializer) prepSubDirectory() error {
 	if _, err := os.Stat(i.appName); err == nil {
-		return errors.Errorf("%s allready exists", i.appName)
+		return errors.Errorf("prep sub directory: %s allready exists", i.appName)
 	}
 	if err := os.Mkdir(i.appName, 0700); err != nil {
 		return err
@@ -86,24 +84,9 @@ func (i *Initializer) prepSubDirectory() error {
 	return nil
 }
 
-func (i *Initializer) createReactApp() error {
-	logrus.Infof("creating new app at %s", i.appName)
-	args := []string{
-		"create-react-app",
-		i.appName,
-		"--typescript",
-	}
-	if err := i.exec("npx", args...); err != nil {
-		return err
-	}
-	logrus.Info("created new react application")
-	return nil
-}
-
 func (i *Initializer) prepSubDirectories() error {
 	for _, dir := range []string{
 		"bin",
-		"public",
 		"server",
 		"src",
 		"tmp",
@@ -111,7 +94,7 @@ func (i *Initializer) prepSubDirectories() error {
 		dir = filepath.Join(i.appName, dir)
 		logrus.Infof("creating folder: %s", dir)
 		if err := os.Mkdir(dir, 0700); err != nil {
-			return errors.Wrapf(err, "making subdirectory %s", dir)
+			return errors.Wrapf(err, "prep sub directories: making subdirectory %s", dir)
 		}
 	}
 	return nil
@@ -129,18 +112,7 @@ func (i *Initializer) prepServerFolder() error {
 		dir = filepath.Join("server", dir)
 		logrus.Infof("creating folder: %s", dir)
 		if err := os.Mkdir(filepath.Join(i.appName, dir), 0700); err != nil {
-			return errors.Wrapf(err, "making subdirectory %s", dir)
-		}
-	}
-	return nil
-}
-
-func (i *Initializer) prepSrcFolder() error {
-	for _, dir := range []string{"actions", "assets", "components", "constants", "modules", "reducers", "store", "views"} {
-		dir = filepath.Join("src", dir)
-		logrus.Infof("creating folder: %s", dir)
-		if err := os.Mkdir(filepath.Join(i.appName, dir), 0700); err != nil {
-			return errors.Wrapf(err, "making subdirectory %s", dir)
+			return errors.Wrapf(err, "prep server folder: making subdirectory %s", dir)
 		}
 	}
 	return nil
@@ -195,7 +167,7 @@ func ensureDirExists(fileName string) error {
 	if _, err := os.Stat(parDir); err == nil {
 		return nil
 	}
-	if err := os.Mkdir(parDir, 0700); err != nil {
+	if err := os.MkdirAll(parDir, 0700); err != nil {
 		return err
 	}
 	return nil
@@ -232,6 +204,7 @@ func (i *Initializer) shouldTemplate(assetName string) bool {
 }
 
 func (i *Initializer) writeBinData() error {
+	logrus.Info("writing bin data")
 	tmplData, err := i.newTemplate()
 	if err != nil {
 		return err
