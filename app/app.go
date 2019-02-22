@@ -9,18 +9,16 @@ import (
 )
 
 type App struct {
-	Pwd         string `json:"pwd"`
-	Root        string `json:"root"`
-	GoPath      string `json:"go_path"`
-	Name        string `json:"name"`
-	Bin         string `json:"bin"`
-	PackagePkg  string `json:"package_path"`
-	ViewsPkg    string `json:"views_path"`
-	ModelsPkg   string `json:"models_path"`
-	WithDep     bool   `json:"with_dep"`
-	WithWebpack bool   `json:"with_webpack"`
-	WithYarn    bool   `json:"with_yarn"`
-	WithDocker  bool   `json:"with_docker"`
+	Pwd        string `json:"pwd"`
+	Root       string `json:"root"`
+	GoPath     string `json:"go_path"`
+	Name       string `json:"name"`
+	Bin        string `json:"bin"`
+	PackagePkg string `json:"package_path"`
+	ViewsPkg   string `json:"views_path"`
+	ModelsPkg  string `json:"models_path"`
+	WithDep    bool   `json:"with_dep"`
+	WithYarn   bool   `json:"with_yarn"`
 }
 
 func (a App) String() string {
@@ -52,9 +50,6 @@ func New() (*App, error) {
 
 	if _, err := os.Stat(filepath.Join(pwd, "Gopkg.toml")); err == nil {
 		app.WithDep = true
-	}
-	if _, err := os.Stat(filepath.Join(pwd, "webpack.config.js")); err == nil {
-		app.WithWebpack = true
 	}
 	if _, err := os.Stat(filepath.Join(pwd, "yarn.lock")); err == nil {
 		app.WithYarn = true
