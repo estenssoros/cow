@@ -11,7 +11,7 @@ export const login = (username: string, password: string) => (dispatch: Function
   return API()
     .post(URLS.login, {}, {}, payload, {})
     .then(response => {
-      toast.success('logged in and saved new config file')
+      toast.success('logged in')
       return dispatch({
         type: LOGIN_SUCCESS,
         payload: { data: response.data }
