@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"github.com/estenssoros/cow/templates/server/api"
+	"{{.ServerAPIPath}}"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 )
