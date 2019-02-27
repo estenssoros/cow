@@ -62,11 +62,13 @@ func (b *Builder) buildAssets() error {
 	args := []string{
 		"-o",
 		filepath.Join("server", "bindata.go"),
-		filepath.Join("server", "data", "build"),
-		filepath.Join("server", "data", "build", "static"),
-		filepath.Join("server", "data", "build", "static", "css"),
-		filepath.Join("server", "data", "build", "static", "js"),
-		filepath.Join("server", "data", "build", "static", "media"),
+		"-prefix",
+		"build",
+		filepath.Join("build"),
+		filepath.Join("build", "static"),
+		filepath.Join("build", "static", "css"),
+		filepath.Join("build", "static", "js"),
+		filepath.Join("build", "static", "media"),
 	}
 	return b.exec(tool, args...)
 }

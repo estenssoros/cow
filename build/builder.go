@@ -35,8 +35,6 @@ func New(ctx context.Context, isWindows bool) (*Builder, error) {
 	b.steps = []func() error{
 		b.prepTarget,
 		b.buildYarn,
-		b.cleanServerBuild,
-		b.moveYarnBuild,
 		b.buildAssets,
 		b.installBuildDeps,
 		b.buildBin,
