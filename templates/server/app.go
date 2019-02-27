@@ -19,7 +19,7 @@ func NewApp() *echo.Echo {
 	engine.Use(cors)
 
 	engine.GET("/", func(c echo.Context) error {
-		if data, err := Asset("server/data/build/index.html"); err == nil {
+		if data, err := Asset("index.html"); err == nil {
 			return c.HTMLBlob(http.StatusOK, data)
 		} else {
 			return err

@@ -48,10 +48,8 @@ func sendBinaryFiles(next echo.HandlerFunc) echo.HandlerFunc {
 					if err != nil {
 						return err
 					}
-					u.Path = path.Join("server", "data", "build", u.Path)
-					urlPath = u.String()
+					urlPath = u.String()[1:]
 				}
-
 				if data, err := Asset(urlPath); err == nil {
 					switch path.Ext(urlPath) {
 					case ".html":
@@ -77,7 +75,7 @@ func sendBinaryFiles(next echo.HandlerFunc) echo.HandlerFunc {
 					}
 				}
 
-				if data, err := Asset("server/data/build/index.html"); err != nil {
+				if data, err := Asset("index.html"); err != nil {
 					return c.JSON(http.StatusInternalServerError, "failed to locate binary")
 				} else {
 					return c.HTMLBlob(http.StatusOK, data)
