@@ -8,6 +8,7 @@ go-bindata \
   templates/public \
   templates/server \
   templates/server/api \
+  templates/server/service \
   templates/src \
   templates/src/actions \
   templates/src/constants \
