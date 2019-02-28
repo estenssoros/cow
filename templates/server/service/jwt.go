@@ -7,6 +7,8 @@ import (
 	"github.com/labstack/echo"
 )
 
+var signingKey = []byte("{{.SecretKey}}")
+
 type JWTService struct {
 	ctx echo.Context
 }
@@ -18,7 +20,7 @@ func NewJWT(ctx echo.Context) (*JWTService, error) {
 }
 
 func (j *JWTService) NewToken() (string, error) {
-	signingKey := []byte("{{.SecretKey}}")
+
 	claims := &jwt.StandardClaims{
 		ExpiresAt: time.Now().Add(1 * time.Hour).Unix(),
 		Issuer:    "cow",
@@ -29,4 +31,14 @@ func (j *JWTService) NewToken() (string, error) {
 		return "", err
 	}
 	return ss, nil
+}
+
+func ValidateToken(tokenString string) error {
+	_, err := jwt.ParseWithClaims(tokenString, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return signingKey, nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
