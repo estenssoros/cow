@@ -8,6 +8,8 @@ import (
 	"strings"
 	"text/template"
 
+	uuid "github.com/satori/go.uuid"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -176,6 +178,7 @@ func ensureDirExists(fileName string) error {
 type TemplateData struct {
 	ServerAPIPath string
 	AppName       string
+	SecretKey     string
 }
 
 func (i *Initializer) newTemplate() (*TemplateData, error) {
@@ -192,12 +195,13 @@ func (i *Initializer) newTemplate() (*TemplateData, error) {
 	return &TemplateData{
 		ServerAPIPath: wd,
 		AppName:       i.appName,
+		SecretKey:     uuid.Must(uuid.NewV4()).String(),
 	}, nil
 }
 
 func (i *Initializer) shouldTemplate(assetName string) bool {
 	switch assetName {
-	case "server/app.go", "package.json", "public/index.html":
+	case "server/app.go", "package.json", "public/index.html", "server/api/routes.go", "server/service/jwt.go":
 		return true
 	}
 	return false
