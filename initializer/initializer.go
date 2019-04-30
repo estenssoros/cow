@@ -148,6 +148,7 @@ func (i *Initializer) writeGitignore() error {
 		".DS_Store",
 		"/server/data",
 		"/server/bindata.go",
+		"/build",
 	}
 	for _, line := range ignore {
 		if _, err := f.Write([]byte(line + "\n")); err != nil {
