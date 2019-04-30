@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"{{.ServerAPIPath}}/service"
+	"{{.ServerPath}}/service"
 	"github.com/labstack/echo"
 )
 
@@ -36,7 +36,7 @@ func loginHandler(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
-	token, err := jwt.NewToken(login.Username)
+	token, err := jwt.NewToken()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
