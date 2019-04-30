@@ -1,3 +1,4 @@
 export const URLS = {
-  login: 'api/login'
+  login: 'api/login',
+  logout: 'api/logout'
 }
