@@ -14,12 +14,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Initializer creates a new repository and project
 type Initializer struct {
 	appName string
 	ctx     context.Context
 	steps   []func() error
 }
 
+// New creates a new initializer
 func New(ctx context.Context, appName string) (*Initializer, error) {
 	i := &Initializer{
 		appName: appName,
@@ -155,6 +157,7 @@ func (i *Initializer) writeGitignore() error {
 	return nil
 }
 
+// Run runs the initializer steps
 func (i *Initializer) Run() error {
 	for _, step := range i.steps {
 		if err := step(); err != nil {
@@ -175,7 +178,9 @@ func ensureDirExists(fileName string) error {
 	return nil
 }
 
+// TemplateData used for templates across the application
 type TemplateData struct {
+	ServerPath    string
 	ServerAPIPath string
 	AppName       string
 	SecretKey     string
@@ -191,9 +196,11 @@ func (i *Initializer) newTemplate() (*TemplateData, error) {
 		return nil, errors.New("must be installed in GOPATH")
 	}
 	wd = strings.Replace(wd, gopath, "", 1)[5:] // github.com/estenssoros/asdf
-	wd = filepath.Join(wd, i.appName, "server", "api")
+	serverPath := filepath.Join(wd, i.appName, "server")
+	apiPath := filepath.Join(serverPath, "api")
 	return &TemplateData{
-		ServerAPIPath: wd,
+		ServerPath:    serverPath,
+		ServerAPIPath: apiPath,
 		AppName:       i.appName,
 		SecretKey:     uuid.Must(uuid.NewV4()).String(),
 	}, nil
@@ -201,7 +208,7 @@ func (i *Initializer) newTemplate() (*TemplateData, error) {
 
 func (i *Initializer) shouldTemplate(assetName string) bool {
 	switch assetName {
-	case "server/app.go", "package.json", "public/index.html", "server/api/routes.go", "server/service/jwt.go":
+	case "server/app.go", "package.json", "public/index.html", "server/api/routes.go", "server/service/jwt.go", "server/api/login.go":
 		return true
 	}
 	return false
@@ -229,17 +236,17 @@ func (i *Initializer) writeBinData() error {
 		}
 		defer f.Close()
 		if i.shouldTemplate(assetName) {
-
+			logrus.Warnf("templating %s", assetName)
 			tmpl, err := template.New("").Parse(string(data))
 			if err != nil {
-				return err
+				return errors.Wrap(err, "template new")
 			}
 			if err := tmpl.Execute(f, tmplData); err != nil {
-				return err
+				return errors.Wrap(err, "template execute")
 			}
 		} else {
 			if _, err := f.Write(data); err != nil {
-				return err
+				return errors.Wrap(err, "write bin data")
 			}
 		}
 
